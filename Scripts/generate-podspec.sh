@@ -63,7 +63,7 @@ MACOS_SDK_CONFIG_VAR='MACOSX_DEPLOYMENT_TARGET'
 IOS_SDK_CONFIG_VAR='IPHONEOS_DEPLOYMENT_TARGET'
 TVOS_SDK_CONFIG_VAR='TVOS_DEPLOYMENT_TARGET'
 WATCHOS_SDK_CONFIG_VAR='WATCHOS_DEPLOYMENT_TARGET'
-
+VISIONOS_SDK_CONFIG_VAR='VISIONOS_DEPLOYMENT_TARGET' # 新增 visionOS
 
 # Read files
 # ##########
@@ -76,6 +76,7 @@ MACOS_SDK="$(read_config_var "${MACOS_SDK_CONFIG_VAR}" '[0-9]+\.[0-9]+' "${SDKS_
 IOS_SDK="$(read_config_var "${IOS_SDK_CONFIG_VAR}" '[0-9]+\.[0-9]+' "${SDKS_XCCONFIG_FILE}")"
 TVOS_SDK="$(read_config_var "${TVOS_SDK_CONFIG_VAR}" '[0-9]+\.[0-9]+' "${SDKS_XCCONFIG_FILE}")"
 WATCHOS_SDK="$(read_config_var "${WATCHOS_SDK_CONFIG_VAR}" '[0-9]+\.[0-9]+' "${SDKS_XCCONFIG_FILE}")"
+VISIONOS_SDK="$(read_config_var "${VISIONOS_SDK_CONFIG_VAR}" '[0-9]+\.[0-9]+' "${SDKS_XCCONFIG_FILE}")" # 新增 visionOS
 
 SUPPORTED_SWIFT_VERSIONS=''
 for SPM_PKG_DEF in Package@swift-*.swift; do
@@ -118,6 +119,10 @@ if [[ -z "${WATCHOS_SDK}" ]]; then
     echo "Could not find ${WATCHOS_SDK_CONFIG_VAR} in ${SDKS_XCCONFIG_FILE}!"
     exit -1
 fi
+if [[ -z "${VISIONOS_SDK}" ]]; then
+    echo "Could not find ${VISIONOS_SDK_CONFIG_VAR} in ${SDKS_XCCONFIG_FILE}!"
+    exit -1
+fi
 
 # Generate podspec
 # ################
@@ -129,11 +134,11 @@ Pod::Spec.new do |s|
   s.name     = 'CocoaLumberjack'
   s.version  = '${CURRENT_VERSION}'
   s.license  = 'BSD'
-  s.summary  = 'A fast & simple, yet powerful & flexible logging framework for macOS, iOS, tvOS and watchOS.'
+  s.summary  = 'A fast & simple, yet powerful & flexible logging framework for macOS, iOS, tvOS, watchOS, and visionOS.' # 更新 summary
   s.authors  = { 'Robbie Hanson' => 'robbiehanson@deusty.com' }
-  s.homepage = 'https://github.com/CocoaLumberjack/CocoaLumberjack'
-  s.source   = { :git => 'https://github.com/CocoaLumberjack/CocoaLumberjack.git',
-                 :tag => "#{s.version}" }
+  s.homepage = 'https://github.com/ywz364kf/CocoaLumberjack.git'
+  s.source   = { :git => 'https://github.com/ywz364kf/CocoaLumberjack.git',
+                 :tag => "${s.version}" }
 
   s.description = 'It is similar in concept to other popular logging frameworks such as log4j, '   \\
                   'yet is designed specifically for objective-c, and takes advantage of features ' \\
@@ -143,10 +148,13 @@ Pod::Spec.new do |s|
   s.cocoapods_version = '>= 1.7.0'
   s.swift_versions = [${SUPPORTED_SWIFT_VERSIONS}]
 
-  s.osx.deployment_target     = '${MACOS_SDK}'
-  s.ios.deployment_target     = '${IOS_SDK}'
-  s.tvos.deployment_target    = '${TVOS_SDK}'
-  s.watchos.deployment_target = '${WATCHOS_SDK}'
+  s.platforms = {
+    "osx" => "${MACOS_SDK}",
+    "ios" => "${IOS_SDK}",
+    "tvos" => "${TVOS_SDK}",
+    "watchos" => "${WATCHOS_SDK}",
+    "visionos" => "${VISIONOS_SDK}"
+  }
 
   s.preserve_paths = 'README.md', 'LICENSE', 'CHANGELOG.md'
 
